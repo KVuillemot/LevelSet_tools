@@ -30,7 +30,7 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
     M.debug = 4  # For debugging and mmg3d output
     print("ok")
     # Setting a P1 level set function
-    phi = phi.flatten()  # ("F")
+    phi = phi.transpose(1, 0, 2).flatten()
     t0 = time.time()
     phiP1 = P1Function3D(M, phi)
     t1 = time.time()
@@ -88,7 +88,7 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
 
 if __name__ == "__main__":
 
-    n = 180
+    n = 128
     xyz = np.linspace(0.0, 1.0, n)
     XX, YY, ZZ = np.meshgrid(xyz, xyz, xyz)
     XX = np.reshape(XX, [-1])
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     phi_np = phi(XXYYZZ[0, :], XXYYZZ[1, :], XXYYZZ[2, :]).reshape(n, n, n)
 
     mesh, mesh_times = create_standard_mesh(
-        phi=phi_np, hmax=0.03, plot_mesh=True, return_times=True
+        phi=phi_np, hmax=0.06, plot_mesh=True, return_times=True
     )
     bd_points = df.BoundaryMesh(mesh, "exterior", True).coordinates()
     vals_phi = phi(bd_points[:, 0], bd_points[:, 1], bd_points[:, 2])
@@ -115,4 +115,24 @@ if __name__ == "__main__":
     error_mean = np.mean(np.absolute(vals_phi) ** 2) ** 0.5
     error_min = np.min(np.absolute(vals_phi))
     error_max = np.max(np.absolute(vals_phi))
-    print(f"{error_mean=:3e} {error_min=:3e} {error_max=:3e}")
+    print(f"{error_mean=:1e} {error_min=:1e} {error_max=:1e}")
+    import vedo
+    import vedo.dolfin as vdf
+
+    my_plt = vdf.plot(mesh, color="purple", interactive=False, axes=0, size=(600, 600))
+    text = f"Boundary errors : MSE = {error_mean:1e} \nmin = {error_min:1e}  max = {error_max:1e}"
+    formula = (
+        vedo.Text3D(text, c="black", s=0.015)
+        .pos(0.08, 0.5, 0.45)
+        .rotate_z(45, around=(0.08, 0.5, 0.45))
+    )
+    actors = my_plt.actors[:]
+    actors.append(formula)
+
+    vedo.show(
+        actors,
+        formula,
+        axes=0,
+        interactive=True,
+        size=[600, 600],
+    )

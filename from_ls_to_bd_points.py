@@ -244,13 +244,14 @@ if __name__ == "__main__":
         error_max = np.max(np.absolute(vals_phi))
         print(f"{error_mean=:3e} {error_min=:3e} {error_max=:3e}")
 
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(6, 6))
         plt.contourf(x, x, phi_np, levels=50, cmap="viridis")
         plt.plot(boundary_points[:, 0], boundary_points[:, 1], "-", color="r")
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         plt.title(
-            f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}"
+            f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}",
+            fontsize=16,
         )
         plt.tight_layout()
         plt.savefig("star_boundary.pdf")

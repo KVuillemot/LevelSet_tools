@@ -107,13 +107,14 @@ if __name__ == "__main__":
     error_min = np.min(np.absolute(vals_phi))
     error_max = np.max(np.absolute(vals_phi))
     print(f"{error_mean=:3e} {error_min=:3e} {error_max=:3e}")
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(6, 6))
     plt.contourf(x, y, phi_np, levels=50, cmap="viridis")
     df.plot(mesh)
     plt.xlim(0, 1)
     plt.ylim(0, 1)
     plt.title(
-        f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}"
+        f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}",
+        fontsize=16,
     )
     plt.tight_layout()
     plt.savefig("from_ls_to_mesh.pdf")
