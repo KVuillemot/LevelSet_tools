@@ -105,7 +105,7 @@ def build_exact_boundary(
 
 if __name__ == "__main__":
 
-    test_case = 2  # 1 : circle 2 : star
+    test_case = 2  # 1 : circle 2 : ellipse 3 : star
 
     if test_case == 1:
         n = 256
@@ -157,7 +157,70 @@ if __name__ == "__main__":
         plt.legend()
         plt.show()
 
-    else:
+    elif test_case == 2:
+        n = 256
+        xmin, xmax, ymin, ymax = 0, 1, 0, 1
+        x, y = np.linspace(xmin, xmax, n), np.linspace(ymin, ymax, n)
+        XX, YY = np.meshgrid(x, y)
+        XX = np.reshape(XX, [-1])
+        YY = np.reshape(YY, [-1])
+        XXYY = np.stack([XX, YY])
+
+        def phi(x, y):
+            return (
+                -1.0
+                + ((x - 0.5) * np.cos(np.pi / 3) + (y - 0.5) * np.sin(np.pi / 3)) ** 2
+                / 0.4**2
+                + ((x - 0.5) * np.sin(np.pi / 3) - (y - 0.5) * np.cos(np.pi / 3)) ** 2
+                / 0.24**2
+            )
+
+        phi_np = phi(XXYY[0, :], XXYY[1, :]).reshape(n, n)
+        boundary_points = build_exact_boundary(
+            phi_np, xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax
+        )
+
+        vals_phi = phi(boundary_points[:, 0], boundary_points[:, 1])
+
+        error_mean = np.mean(np.absolute(vals_phi) ** 2) ** 0.5
+        error_min = np.min(np.absolute(vals_phi))
+        error_max = np.max(np.absolute(vals_phi))
+        print(f"{error_mean=:3e} {error_min=:3e} {error_max=:3e}")
+
+        plt.figure(figsize=(10, 10))
+        plt.contourf(x, x, phi_np, levels=50, cmap="viridis")
+        plt.plot(
+            boundary_points[:, 0],
+            boundary_points[:, 1],
+            "+",
+            color="r",
+            label="reconstructed boundary points",
+        )
+        exact_boundary_points = np.array(
+            [
+                0.5
+                + np.array(
+                    [
+                        [np.cos(np.pi / 3), np.sin(np.pi / 3)],
+                        [np.sin(np.pi / 3), -np.cos(np.pi / 3)],
+                    ]
+                )
+                @ np.array([0.4 * np.cos(t), 0.24 * np.sin(t)])
+                for t in np.linspace(0, 2.0 * np.pi, 5000)
+            ]
+        )
+        plt.plot(
+            exact_boundary_points[:, 0],
+            exact_boundary_points[:, 1],
+            "k-",
+            label="exact",
+        )
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
+        plt.legend()
+        plt.show()
+
+    elif test_case == 3:
         n = 256
         xmin, xmax, ymin, ymax = -1, 1, -1, 1
         x, y = np.linspace(xmin, xmax, n), np.linspace(ymin, ymax, n)
@@ -167,7 +230,7 @@ if __name__ == "__main__":
         XXYY = np.stack([XX, YY])
 
         def phi(x, y):
-            return x**2 + y**2 - (0.6 + 0.2 * np.sin(6 * np.arctan(y / x)))
+            return x**2 + y**2 - (0.6 + 0.24 * np.sin(6 * np.arctan(y / x)))
 
         phi_np = phi(XXYY[0, :], XXYY[1, :]).reshape(n, n)
         boundary_points = build_exact_boundary(

@@ -4,10 +4,10 @@ import os
 import dolfin as df
 import time
 from pymedit import (
-    P1Function,
-    square,
-    mmg2d,
-    trunc,
+    P1Function3D,
+    mmg3d,
+    trunc3DMesh,
+    cube,
 )
 
 
@@ -24,20 +24,21 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
     """
     t0 = time.time()
     n = np.shape(phi)[0]
-    M = square(n - 1, n - 1)
+    M = cube(n - 1, n - 1, n - 1)
     t1 = time.time()
     construct_background_mesh = t1 - t0
     M.debug = 4  # For debugging and mmg3d output
-
+    print("ok")
     # Setting a P1 level set function
-    phi = phi.flatten("F")
+    phi = phi.flatten()  # ("F")
     t0 = time.time()
-    phiP1 = P1Function(M, phi)
+    phiP1 = P1Function3D(M, phi)
     t1 = time.time()
+    print("ok")
     interp_time = t1 - t0
     # Remesh according to the level set
     t0 = time.time()
-    newM = mmg2d(
+    newM = mmg3d(
         M,
         hmax=hmax / 1.43,
         hmin=hmax / 2,
@@ -48,12 +49,14 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
     )
     t1 = time.time()
     remesh_time = t1 - t0
+    print("ok")
     # Trunc the negative subdomain of the level set
     t0 = time.time()
-    Mf = trunc(newM, 3)
+    Mf = trunc3DMesh(newM, 3)
     t1 = time.time()
     trunc_mesh = t1 - t0
-    Mf.save("Thf.mesh")  # Saving in binary format
+    print("ok")
+    Mf.save("Thf.mesh")
     command = "meshio convert Thf.mesh Thf.xml"
     t0 = time.time()
     os.system(command)
@@ -64,11 +67,11 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
     t1 = time.time()
     fenics_read_time = t1 - t0
     if plot_mesh:
-        plt.figure()
-        df.plot(mesh, color="purple")
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
-        plt.show()
+        import vedo
+        import vedo.dolfin as vdf
+
+        vdf.plot(mesh, color="purple")
+        vedo.close()
 
     if return_times:
         return mesh, [
@@ -85,22 +88,29 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
 
 if __name__ == "__main__":
 
-    n = 512
-    XX, YY = np.meshgrid(np.linspace(0.0, 1.0, n), np.linspace(0.0, 1.0, n))
+    n = 180
+    xyz = np.linspace(0.0, 1.0, n)
+    XX, YY, ZZ = np.meshgrid(xyz, xyz, xyz)
     XX = np.reshape(XX, [-1])
     YY = np.reshape(YY, [-1])
-    XXYY = np.stack([XX, YY])
+    ZZ = np.reshape(ZZ, [-1])
+    XXYYZZ = np.stack([XX, YY, ZZ])
 
-    def phi(x, y):
-        return -1.0 + ((x - 0.5) / 0.38) ** 2 + ((y - 0.5) / 0.23) ** 2
+    def phi(x, y, z):
+        return (
+            -1.0
+            + ((x - 0.5) / 0.23) ** 2
+            + ((y - 0.5) / 0.28) ** 2
+            + ((z - 0.5) / 0.35) ** 2
+        )
 
-    phi_np = phi(XXYY[0, :], XXYY[1, :]).reshape(n, n)
+    phi_np = phi(XXYYZZ[0, :], XXYYZZ[1, :], XXYYZZ[2, :]).reshape(n, n, n)
 
     mesh, mesh_times = create_standard_mesh(
-        phi=phi_np, hmax=0.002, plot_mesh=True, return_times=True
+        phi=phi_np, hmax=0.03, plot_mesh=True, return_times=True
     )
     bd_points = df.BoundaryMesh(mesh, "exterior", True).coordinates()
-    vals_phi = phi(bd_points[:, 0], bd_points[:, 1])
+    vals_phi = phi(bd_points[:, 0], bd_points[:, 1], bd_points[:, 2])
 
     error_mean = np.mean(np.absolute(vals_phi) ** 2) ** 0.5
     error_min = np.min(np.absolute(vals_phi))
