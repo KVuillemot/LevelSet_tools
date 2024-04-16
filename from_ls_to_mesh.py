@@ -86,7 +86,8 @@ def create_standard_mesh(phi, hmax=0.05, plot_mesh=False, return_times=False):
 if __name__ == "__main__":
 
     n = 512
-    XX, YY = np.meshgrid(np.linspace(0.0, 1.0, n), np.linspace(0.0, 1.0, n))
+    x, y = np.linspace(0.0, 1.0, n), np.linspace(0.0, 1.0, n)
+    XX, YY = np.meshgrid(x, y)
     XX = np.reshape(XX, [-1])
     YY = np.reshape(YY, [-1])
     XXYY = np.stack([XX, YY])
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     phi_np = phi(XXYY[0, :], XXYY[1, :]).reshape(n, n)
 
     mesh, mesh_times = create_standard_mesh(
-        phi=phi_np, hmax=0.002, plot_mesh=True, return_times=True
+        phi=phi_np, hmax=0.05, plot_mesh=True, return_times=True
     )
     bd_points = df.BoundaryMesh(mesh, "exterior", True).coordinates()
     vals_phi = phi(bd_points[:, 0], bd_points[:, 1])
@@ -106,3 +107,14 @@ if __name__ == "__main__":
     error_min = np.min(np.absolute(vals_phi))
     error_max = np.max(np.absolute(vals_phi))
     print(f"{error_mean=:3e} {error_min=:3e} {error_max=:3e}")
+    plt.figure(figsize=(10, 10))
+    plt.contourf(x, y, phi_np, levels=50, cmap="viridis")
+    df.plot(mesh)
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.title(
+        f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}"
+    )
+    plt.tight_layout()
+    plt.savefig("from_ls_to_mesh.pdf")
+    plt.show()

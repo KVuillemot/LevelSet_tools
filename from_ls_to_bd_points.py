@@ -105,7 +105,7 @@ def build_exact_boundary(
 
 if __name__ == "__main__":
 
-    test_case = 2  # 1 : circle 2 : ellipse 3 : star
+    test_case = 3  # 1 : circle 2 : ellipse 3 : star
 
     if test_case == 1:
         n = 256
@@ -246,7 +246,12 @@ if __name__ == "__main__":
 
         plt.figure(figsize=(10, 10))
         plt.contourf(x, x, phi_np, levels=50, cmap="viridis")
-        plt.plot(boundary_points[:, 0], boundary_points[:, 1], "-+", color="k")
+        plt.plot(boundary_points[:, 0], boundary_points[:, 1], "-", color="r")
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
+        plt.title(
+            f"Boundary errors : MSE ={error_mean:3e} \nmin = {error_min:3e} max = {error_max:3e}"
+        )
+        plt.tight_layout()
+        plt.savefig("star_boundary.pdf")
         plt.show()
