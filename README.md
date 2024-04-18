@@ -3,7 +3,11 @@ This repository has for objective of regrouping different Python tools for using
 - creation of a set of boundary points from numpy arrays of values of LS function; 
 - creation of conforming meshes from numpy arrays of values of LS function, that can be used with [*FEniCS*](https://fenicsproject.org/); 
 
-For the moment these codes are only available for 2D level-set functions but they will be extended to 3D in the future. 
+The creation of 3D meshes is also available but is not optimal because of the high computation time.
+
+Boundary reconstruction | 2D mesh reconstruction | 3D mesh reconstruciton
+--- | --- | ---
+![](./star_boundary.png) | ![](./from_ls_to_mesh.png) | ![](./from_ls_to_mesh_3D.png)
 
 For `./from_ls_to_bd_points.py` the required Python packages are very standard and can be installed by :
 
